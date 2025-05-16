@@ -1,0 +1,146 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Enhanced Todo List</title>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            background-color: #f4f4f4;
+            margin: 0;
+            padding: 20px;
+        }
+        h1 {
+            color: #333;
+        }
+        form {
+            margin-bottom: 20px;
+        }
+        input[type="text"] {
+            padding: 10px;
+            width: 300px;
+            margin-right: 10px;
+        }
+        button {
+            padding: 10px 15px;
+            background-color: #28a745;
+            color: white;
+            border: none;
+            cursor: pointer;
+        }
+        button:hover {
+            background-color: #218838;
+        }
+        ul {
+            list-style-type: none;
+            padding: 0;
+        }
+        li {
+            background-color: #fff;
+            margin-bottom: 10px;
+            padding: 10px;
+            border-radius: 5px;
+            display: flex;
+            align-items: center;
+        }
+    </style>
+</head>
+<body>
+    <h1>Enhanced Todo List</h1>
+    <form id="todo-form">
+        <input type="text" id="todo-input" placeholder="Enter a new task" required>
+        <button type="submit">Add Task</button><br><br>
+        <label for="search">Search:</label>
+        <input type="text" id="search-input" placeholder="Search tasks">
+        <h3>Your Tasks :</h3>
+        <ul id="taskLists"></ul> 
+        
+
+    <script>
+        // Helper to get tasks from localStorage
+        function getTasks() {
+            return JSON.parse(localStorage.getItem('tasks') || '[]');
+        }
+
+        // Helper to save tasks to localStorage
+        function saveTasks(tasks) {
+            localStorage.setItem('tasks', JSON.stringify(tasks));
+        }
+
+        // Render tasks to the DOM
+        function renderTasks(filter = '') {
+            const tasks = getTasks();
+            const taskList = document.getElementById('taskLists');
+            taskList.innerHTML = '';
+            tasks
+                .filter(task => task.text.toLowerCase().includes(filter.toLowerCase()))
+                .forEach(task => {
+                    const li = document.createElement('li');
+                    li.style.display = 'flex';
+                    li.style.alignItems = 'center';
+
+                    const checkbox = document.createElement('input');
+                    checkbox.type = 'checkbox';
+                    checkbox.checked = task.completed;
+                    checkbox.addEventListener('change', () => {
+                        task.completed = checkbox.checked;
+                        saveTasks(tasks);
+                        renderTasks(document.getElementById('search-input').value);
+                    });
+
+                    const span = document.createElement('span');
+                    span.textContent = task.text;
+                    span.style.margin = '0 8px';
+                    if (task.completed) {
+                        span.style.textDecoration = 'line-through';
+                        span.style.color = '#888';
+                    }
+
+                    const removeBtn = document.createElement('button');
+                    removeBtn.textContent = 'Remove';
+                    removeBtn.style.marginLeft = 'auto';
+                    removeBtn.addEventListener('click', () => {
+                        const idx = tasks.findIndex(t => t.id === task.id);
+                        if (idx > -1) {
+                            tasks.splice(idx, 1);
+                            saveTasks(tasks);
+                            renderTasks(document.getElementById('search-input').value);
+                        }
+                    });
+
+                    li.appendChild(checkbox);
+                    li.appendChild(span);
+                    li.appendChild(removeBtn);
+                    taskList.appendChild(li);
+                });
+        }
+
+        // Add task event
+        document.getElementById('todo-form').addEventListener('submit', function(e) {
+            e.preventDefault();
+            const input = document.getElementById('todo-input');
+            const text = input.value.trim();
+            if (text) {
+                const tasks = getTasks();
+                tasks.push({
+                    id: Date.now().toString() + Math.random().toString(36).substr(2, 5),
+                    text,
+                    completed: false
+                });
+                saveTasks(tasks);
+                input.value = '';
+                renderTasks(document.getElementById('search-input').value);
+            }
+        });
+
+        // Search event
+        document.getElementById('search-input').addEventListener('input', function() {
+            renderTasks(this.value);
+        });
+
+        // Initial render
+        renderTasks();
+    </script>
+</body>
+</html>
