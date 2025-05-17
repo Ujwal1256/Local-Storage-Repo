@@ -1,0 +1,97 @@
+<!DOCTYPE html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Persistent List App</title>
+    <style>
+      body {
+        font-family: Arial, sans-serif;
+        margin: 2rem;
+      }
+      #items {
+        margin: 1rem 0;
+      }
+      li {
+        margin-bottom: 0.5rem;
+      }
+      .empty {
+        color: #888;
+      }
+      button {
+        margin-left: 0.5rem;
+      }
+    </style>
+  </head>
+  <body>
+    <h1>My List</h1>
+    <input type="text" id="itemInput" placeholder="Add new item..." />
+    <button id="addBtn">Add</button>
+    <button id="clearBtn">Clear All</button>
+    <ul id="items"></ul>
+    <div id="emptyMsg" class="empty" style="display: none">
+      No items added yet.
+    </div>
+
+    <script>
+      const STORAGE_KEY = "persistentListItems";
+      const itemsUl = document.getElementById("items");
+      const input = document.getElementById("itemInput");
+      const addBtn = document.getElementById("addBtn");
+      const clearBtn = document.getElementById("clearBtn");
+      const emptyMsg = document.getElementById("emptyMsg");
+
+      let items = [];
+
+      function saveItems() {
+        localStorage.setItem(STORAGE_KEY, JSON.stringify(items));
+      }
+
+      function loadItems() {
+        const data = localStorage.getItem(STORAGE_KEY);
+        items = data ? JSON.parse(data) : [];
+      }
+
+      function renderItems() {
+        itemsUl.innerHTML = "";
+        if (items.length === 0) {
+          emptyMsg.style.display = "";
+        } else {
+          emptyMsg.style.display = "none";
+          items.forEach((item) => {
+            const li = document.createElement("li");
+            li.textContent = item;
+            itemsUl.appendChild(li);
+          });
+        }
+      }
+
+      addBtn.onclick = function () {
+        const value = input.value.trim();
+        if (value) {
+          items.push(value);
+          saveItems();
+          renderItems();
+          input.value = "";
+          input.focus();
+        }
+      };
+
+      input.addEventListener("keydown", function (e) {
+        if (e.key === "Enter") addBtn.onclick();
+      });
+
+      clearBtn.onclick = function () {
+        if (confirm("Clear all items?")) {
+          items = [];
+          saveItems();
+          renderItems();
+        }
+      };
+
+      // Initialize
+      loadItems();
+      renderItems();
+    </script>
+  </body>
+</html>
