@@ -1,0 +1,185 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Multi-User Shopping Cart</title>
+    
+</head>
+<body>
+    
+<div id="login-section">
+    <h2>Login</h2>
+    <input type="text" id="username" placeholder="Enter unique username" />
+    <button id="login-btn">Login</button>
+    <div id="login-error" style="color:red;"></div>
+</div>
+
+<div id="cart-section" style="display:none;">
+    <h2>Shopping Cart (<span id="current-user"></span>)</h2>
+    <button id="logout-btn">Logout</button>
+    <form id="add-item-form">
+        <input type="text" id="item-name" placeholder="Item name" required />
+        <input type="number" id="item-price" placeholder="Price" min="0.01" step="0.01" required />
+        <input type="number" id="item-quantity" placeholder="Quantity" min="1" required />
+        <button type="submit">Add Item</button>
+    </form>
+    <table border="1" id="cart-table" style="width:100%; margin-top:10px;">
+        <thead>
+            <tr>
+                <th>Item Name</th>
+                <th>Price ($)</th>
+                <th>Quantity</th>
+                <th>Total ($)</th>
+                <th>Actions</th>
+            </tr>
+        </thead>
+        <tbody id="cart-body">
+        </tbody>
+    </table>
+    <h3>Total Cost: $<span id="total-cost">0.00</span></h3>
+</div>
+
+<script>
+const loginSection = document.getElementById('login-section');
+const cartSection = document.getElementById('cart-section');
+const loginBtn = document.getElementById('login-btn');
+const logoutBtn = document.getElementById('logout-btn');
+const usernameInput = document.getElementById('username');
+const loginError = document.getElementById('login-error');
+const currentUserSpan = document.getElementById('current-user');
+const addItemForm = document.getElementById('add-item-form');
+const cartBody = document.getElementById('cart-body');
+const totalCostSpan = document.getElementById('total-cost');
+
+let currentUser = null;
+let carts = {};
+
+function loadCarts() {
+    const data = localStorage.getItem('multiUserCarts');
+    carts = data ? JSON.parse(data) : {};
+}
+
+function saveCarts() {
+    localStorage.setItem('multiUserCarts', JSON.stringify(carts));
+}
+
+function renderCart() {
+    cartBody.innerHTML = '';
+    let total = 0;
+    const cart = carts[currentUser] || [];
+    cart.forEach((item, idx) => {
+        const itemTotal = (item.price * item.quantity).toFixed(2);
+        total += parseFloat(itemTotal);
+        cartBody.innerHTML += `
+            <tr>
+                <td>${item.itemName}</td>
+                <td><input type="number" min="0.01" step="0.01" value="${item.price}" data-idx="${idx}" class="edit-price" style="width:70px;" /></td>
+                <td><input type="number" min="1" value="${item.quantity}" data-idx="${idx}" class="edit-quantity" style="width:50px;" /></td>
+                <td>${itemTotal}</td>
+                <td>
+                    <button data-idx="${idx}" class="remove-btn">Remove</button>
+                </td>
+            </tr>
+        `;
+    });
+    totalCostSpan.textContent = total.toFixed(2);
+}
+
+function showCart() {
+    loginSection.style.display = 'none';
+    cartSection.style.display = '';
+    currentUserSpan.textContent = currentUser;
+    renderCart();
+}
+
+function showLogin() {
+    cartSection.style.display = 'none';
+    loginSection.style.display = '';
+    usernameInput.value = '';
+    loginError.textContent = '';
+}
+
+loginBtn.onclick = function() {
+    const username = usernameInput.value.trim();
+    if (!username) {
+        loginError.textContent = 'Username required.';
+        return;
+    }
+    loadCarts();
+    if (!carts[username]) {
+        carts[username] = [];
+        saveCarts();
+    }
+    currentUser = username;
+    showCart();
+};
+
+logoutBtn.onclick = function() {
+    currentUser = null;
+    showLogin();
+};
+
+addItemForm.onsubmit = function(e) {
+    e.preventDefault();
+    const itemName = document.getElementById('item-name').value.trim();
+    const price = parseFloat(document.getElementById('item-price').value);
+    const quantity = parseInt(document.getElementById('item-quantity').value, 10);
+
+    if (!itemName || isNaN(price) || price <= 0 || isNaN(quantity) || quantity < 1) {
+        alert('Please enter valid item details.');
+        return;
+    }
+
+    const cart = carts[currentUser];
+    const existing = cart.find(item => item.itemName.toLowerCase() === itemName.toLowerCase());
+    if (existing) {
+        existing.quantity += quantity;
+        existing.price = price; // update price if changed
+    } else {
+        cart.push({ itemName, price, quantity });
+    }
+    saveCarts();
+    renderCart();
+    addItemForm.reset();
+};
+
+cartBody.onclick = function(e) {
+    if (e.target.classList.contains('remove-btn')) {
+        const idx = e.target.getAttribute('data-idx');
+        carts[currentUser].splice(idx, 1);
+        saveCarts();
+        renderCart();
+    }
+};
+
+cartBody.oninput = function(e) {
+    const idx = e.target.getAttribute('data-idx');
+    if (e.target.classList.contains('edit-quantity')) {
+        let val = parseInt(e.target.value, 10);
+        if (isNaN(val) || val < 1) {
+            e.target.value = carts[currentUser][idx].quantity;
+            return;
+        }
+        carts[currentUser][idx].quantity = val;
+        saveCarts();
+        renderCart();
+    }
+    if (e.target.classList.contains('edit-price')) {
+        let val = parseFloat(e.target.value);
+        if (isNaN(val) || val <= 0) {
+            e.target.value = carts[currentUser][idx].price;
+            return;
+        }
+        carts[currentUser][idx].price = val;
+        saveCarts();
+        renderCart();
+    }
+};
+
+
+
+showLogin();
+</script>
+</body>
+</html>
