@@ -1,0 +1,32 @@
+<!DOCTYPE html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Meme Product Catalog</title>
+    <link rel="stylesheet" href="style.css" />
+    
+  </head>
+  <body>
+    <div class="container">
+      <div class="controls">
+        <button id="fetchBtn">Fetch Memes</button>
+        <input type="text" id="searchInput" placeholder="Search memes..." />
+        <select id="sortSelect">
+          <option value="name-asc">Sort: Name (A-Z)</option>
+          <option value="name-desc">Sort: Name (Z-A)</option>
+          <option value="width-asc">Sort: Width (Low-High)</option>
+          <option value="width-desc">Sort: Width (High-Low)</option>
+          <option value="height-asc">Sort: Height (Low-High)</option>
+          <option value="height-desc">Sort: Height (High-Low)</option>
+        </select>
+        <label>
+          <input type="checkbox" id="showFavsOnly" />
+          Show Favorites Only
+        </label>
+      </div>
+      <div id="grid" class="grid"></div>
+    </div>
+    <script src="script.js"></script>
+  </body>
+</html>
